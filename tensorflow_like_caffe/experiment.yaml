@@ -1,0 +1,46 @@
+# ===================
+# solver configuration
+# ====================
+
+# number of gpus to use, this will be ignored if we're not using multi-gpu training
+num_gpus: 4
+num_epochs: 50
+
+# run validation every N steps, DID NOT USE THIS VERSION
+vld_iter: 500
+# checkpoints(save model weights in .npz) every N epoches
+checkpoint_iter: 5
+experiment_dir: "exp1"
+checkpoint_dir: "exp1/checkpoints"
+
+# train data set config
+data_folder: "/home/guorui/lfw"
+# note that every class will be splited into 7:3 for train:test
+split_ratio: 0.3
+# if less than 3, this label will remove while training, that means the code will decide
+# which class can be contained into trainning, YOU JUST GIVE THE DATA FOLDER
+min_nrof_images_per_class: 3
+
+# data enhancement
+random_rotate: False
+random_crop: True
+random_flip: True
+use_fixed_image_standardization: False
+# readers for reading photos
+nrof_preprocess_threads: 20
+
+# path to pre-trained weights to initialize model with before training
+pretrained_weights: null
+
+# ============
+# model config
+# ============
+batch_size: 64
+num_classes: 10
+learning_rate: 0.01
+image_size: 224
+weight_decay: 0.0005
+learning_rate_decay_epochs: 10
+learning_rate_decay_factor: 0.1
+# ADAGRAD ADADELTA ADAM RMSPROP MOM
+opt: MOM
