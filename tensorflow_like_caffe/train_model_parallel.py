@@ -24,7 +24,7 @@ config = {}
 # customize your model here
 # =========================
 def build_model(input_data_tensor, input_label_tensor, num_classes,scope):
-    logits = vgg.intfVGG(input_data_tensor, n_classes=num_classes)
+    logits,_ = vgg.intfVGG(input_data_tensor, n_classes=num_classes)
     loss = vgg.loss(logits, input_label_tensor)
     # Assemble all of the losses for the current tower only.
     # scope: (Optional.) If supplied, the resulting list is filtered to include only items whose name attribute matches using re.match.
@@ -70,6 +70,8 @@ def train():
     dataset = train_data_generator.get_dataset(data_folder)
     train_set, val_set=train_data_generator.split_dataset(dataset, split_ratio, min_nrof_images_per_class, mode='SPLIT_IMAGES')
     nrof_classes = len(train_set)
+    print 'My classes is: ', nrof_classes, split_ratio
+    raw_input("------------")
     # in train_set, we store {label:[many photos]}, now change to [label...]:[photo...]
     image_list, label_list = train_data_generator.get_image_paths_and_labels(train_set)
     # val_image_list, val_label_list = train_data_generator.get_image_paths_and_labels(val_set)
@@ -77,7 +79,8 @@ def train():
     num_samples_per_epoch = len(image_list)
     steps_per_epoch = num_samples_per_epoch // (batch_size * num_gpus)
     num_steps = steps_per_epoch * num_epochs
-
+    print 'My steps_per_epoch is: ', steps_per_epoch
+    raw_input("------------")
     # =====================
     # define training graph
     # =====================
@@ -125,7 +128,7 @@ def train():
             optimizer = tf.train.AdamOptimizer(learning_rate_op, beta1=0.9, beta2=0.999, epsilon=0.1)
         elif opt=='RMSPROP':
             optimizer = tf.train.RMSPropOptimizer(learning_rate_op, decay=0.9, momentum=0.9, epsilon=1.0)
-        else opt=='MOM':
+        else:
             optimizer = tf.train.MomentumOptimizer(learning_rate_op, 0.9, use_nesterov=True)
 
         # setup one model replica per gpu to compute loss and gradient
@@ -155,10 +158,16 @@ def train():
     summary_writer = tf.summary.FileWriter('log', sess.graph)
     coord = tf.train.Coordinator()
     tf.train.start_queue_runners(coord=coord, sess=sess)
+
     with sess.as_default():
         if pretrained_weights:
             print("-- loading weights from %s" % pretrained_weights)
-            tools.load_weights(G, pretrained_weights)
+            if 'npz' in pretrained_weights:
+                tools.load_weights_npz(G, pretrained_weights)
+            elif 'npy' in pretrained_weights:
+                tools.load_weights_npy(pretrained_weights,sess,G)
+            else:
+                print 'unknow file, skip load weights'
 
         for step in range(num_steps):
             if step%steps_per_epoch == 0:
